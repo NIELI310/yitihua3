@@ -1,5 +1,6 @@
 package cn.edu.nenu.domain;
 
+import cn.edu.nenu.config.Constants;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -45,7 +46,7 @@ public class Post {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;//主键编码  Long,String;对文章的总数进行预估，一般要预留出3-5年的数据量变化情况
+    private long id;//主键编码  Long,String;对文章的总数进行预估，一般要预留出3-5年的数据量变化情况
     @Column(length = 254)
     private String title;//文章标题
     /**
@@ -57,7 +58,6 @@ public class Post {
     @Basic(fetch = FetchType.EAGER)
     //@Column(columnDefinition = "text")
     private String content;//文章内容
-
     /**
      * 三种写法：
      *  1.在Entity中直接增加Set集合方式（使用JPA作为ORM框架，推荐使用此方式）
@@ -74,9 +74,13 @@ public class Post {
 
     @ManyToOne
     private User creator;//创建者
-    private LocalDateTime createdAt;//发布时间
-    private LocalDateTime lastModifiedAt;//最后编辑时间
-    private Integer status;//状态
+    private String createdAt;//发布时间
+    private String lastModifiedAt;//最后编辑时间
+    @Column(nullable = false)
+    private Constants.Status status;//属性状态
+    @Column(length = 64,nullable = false)
+    private float sort=0;//属性排序
+
 }
 
 

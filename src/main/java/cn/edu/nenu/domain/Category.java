@@ -1,5 +1,6 @@
 package cn.edu.nenu.domain;
 
+import cn.edu.nenu.config.Constants;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -24,9 +25,10 @@ public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id; //主键编码
+    private Long id; //主键编码
     @Column(length = 64,nullable = false)
     private String name;//栏目名称
     private float sort;//排序
-    private Integer status;//状态（0：不可用；1：可用）
+    @Column(nullable = false)
+    private Constants.Status status;//属性状态
 }

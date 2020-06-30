@@ -28,7 +28,7 @@ public class AccountController {
      */
     @GetMapping("/{id}")
     public ResponseEntity get(@PathVariable("id")Long id){
-        User user = userService.findById(id);
+        User user = userService.findOne(id);
         return ResponseEntity.ok(user); //json字符串
     }
 

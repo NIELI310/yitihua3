@@ -41,5 +41,5 @@ public class User implements Serializable {
     private String sex; //性别
     private Integer status;//状态
     //@Temporal(value = TemporalType.DATE )
-    private LocalDateTime createdAt;//创建时间 created_at
+    private String createdAt;//创建时间 created_at
 }

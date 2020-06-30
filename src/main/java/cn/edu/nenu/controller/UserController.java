@@ -1,9 +1,14 @@
 package cn.edu.nenu.controller;
 
+import cn.edu.nenu.config.Constants;
+import cn.edu.nenu.config.HttpServlet;
+import cn.edu.nenu.domain.Dictionary;
+import cn.edu.nenu.domain.Storage;
 import cn.edu.nenu.domain.User;
 import cn.edu.nenu.service.UserService;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+
+import static cn.edu.nenu.config.Constants.PAGE_SIZE;
 
 /**
  * UserController Class
@@ -43,14 +51,42 @@ public class UserController {
      * @param request
      * @return
      */
-    @GetMapping()
-    public String list(@RequestParam(value = "page",defaultValue = "1")int pageNumber,
-                       Model model, ServletRequest request){
-        //String param = request.getParameter("param");
-        //List users = userService.getPage(pageNumber,PAGE_SIZE,param);
-        //model.addAttribute("param",param);
+    @RequestMapping("")
+    public String list(@RequestParam(value = "sortType", defaultValue = "auto") String sortType,
+                       @RequestParam(value = "page", defaultValue = "1") int pageNumber, Model model, ServletRequest request){
+        Map<String, Object> searchParams = HttpServlet.getParametersStartingWith(request, "s_");
+        Page<User> users = userService.getPage(pageNumber,PAGE_SIZE,searchParams,sortType);
+        model.addAttribute("users",users);
+        model.addAttribute("PAGE_SIZE", PAGE_SIZE);
+        model.addAttribute("searchParams", HttpServlet.encodeParameterStringWithPrefix(searchParams, "s_"));
+
         return "user/list"; //视图名，视图路径
     }
+
+    /**
+     * 进入新增页面
+     */
+    @GetMapping(value = "/create")
+    public String createForm(Model model) {
+        model.addAttribute("user", new User());
+        model.addAttribute("action", "create");
+        return "user/form";
+    }
+
+    /**
+     * 新增页面，提交保存
+     * @author zhangtz, 2020.06.23
+     */
+    @PostMapping(value = "/create")
+    public String create(@Valid User newDict, RedirectAttributes redirectAttributes)
+    {
+
+        userService.save(newDict);
+        redirectAttributes.addFlashAttribute("message", "创建数据字典成功");
+        return "redirect:/user/";
+    }
+
+
 
     /**
      * 根据主键ID获取实体，获取详细信息
@@ -59,7 +95,7 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public User get(@PathVariable("id")Long id){
-        return userService.findById(id);
+        return userService.findOne(id);
     }
 
     /**
@@ -89,16 +125,7 @@ public class UserController {
      * @param attributes
      * @return
      */
-    @PostMapping("/create")
-    public String create(@Valid User newUser, RedirectAttributes attributes){
-        //第一：request接收参数而来
-        //第二：采用自动绑定接收参数而来
-        //第三：接收字符串类型的JSON数据，反序列为对象
-        newUser = userService.save(newUser);
-        attributes.addAttribute("message","保存成功");
-        attributes.addAttribute("user",newUser);
-        return "redirect:/user";
-    }
+
 
     //@PostMapping
     //public String createJSON(@RequestBody String json, RedirectAttributes attributes){
@@ -114,6 +141,60 @@ public class UserController {
     //    userService.save(newUser);
     //    return "redirect:/user"; //视图路径
     //}
+    /**
+     * 进入编辑页面
+     */
+    @GetMapping(value = "update/{id}")
+    public String updateForm(@PathVariable("id") Long pkId, Model model){
+        User user = userService.findOne(pkId);
+        model.addAttribute("user",user);
+        model.addAttribute("action", "update");
+        return "user/form";
+    }
 
+    /**
+     * 页面编辑后，保存
+     */
+    @PostMapping(value = "update")
+    public String update(@Valid User user, RedirectAttributes redirectAttributes){
+        Long pkId = user.getId();
+        User newDict = userService.findOne(pkId);
+        newDict.setCreatedAt(user.getCreatedAt());
+        newDict.setName(user.getName());
+        newDict.setPassword(user.getPassword());
+        newDict.setUsername(user.getUsername());
+        newDict.setSex(user.getSex());
+        newDict.setStatus(user.getStatus());
+        userService.save(newDict);
+        redirectAttributes.addFlashAttribute("message", "更改数据字典信息成功");
+        return "redirect:/user/";
+    }
+
+    /**
+     * 根据ID删除单个字典
+     */
+    @GetMapping(value = "delete/{id}")
+    public String delete(@PathVariable("id") Long pkId, RedirectAttributes redirectAttributes) {
+        String message = "删除字典成功";
+        try {
+            userService.remove(pkId);
+        }catch (Exception e){
+            message = "删除字典失败，该字典被使用";
+        }
+        redirectAttributes.addFlashAttribute("message", message);
+        return "redirect:/user/";
+    }
+
+    /**
+     * 批量删除
+     */
+    @PostMapping(value = "delete")
+    public String deleteBatch(ServletRequest request,RedirectAttributes redirectAttributes){
+        String[] chkIds = request.getParameterValues("chkIds");
+        for (String id:chkIds){
+            userService.remove(Long.valueOf(id));
+        }
+        return "redirect:/user/";
+    }
 
 }

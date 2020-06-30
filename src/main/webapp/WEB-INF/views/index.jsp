@@ -18,6 +18,7 @@
     <div class="container">
         <tags:nav/>
         <div class="jumbotron">
+            <h2>欢迎登录 ${username}，每天进步一点点 </h2>
             <h2>内容管理系统<small>（SSH框架整合实战项目）</small></h2>
             <p>一体化软件工程实践三之整合框架开发，采用Bootstrap + Spring MVC + Spring + JPA技术，实现内容管理系统</p>
             <p></p>
